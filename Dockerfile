@@ -1,15 +1,11 @@
-FROM php:8.1-apache
+FROM php:8.2-apache
 
-# প্রয়োজনীয় এক্সটেনশন ইন্সটল করা
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+WORKDIR /var/www/html
 
-# Apache rewrite module চালু করা
-RUN a2enmod rewrite
-
-# ফাইল কপি করা
 COPY . /var/www/html/
 
-# পারমিশন সেট করা (সুরক্ষার জন্য)
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
+
+CMD ["apache2-foreground"]
