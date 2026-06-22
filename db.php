@@ -1,24 +1,24 @@
-
 <?php
-// ডাটাবেস কনফিগারেশন
-$host = 'sql107.infinityfree.com';
-$db   = 'if0_42220690_sabbir_net';
-$user = 'if0_42220690';
-$pass = '31663636';
+/* File: config/db.php - Database Configuration */
 
-// মাইএসকিউএলআই (MySQLi) কানেকশন তৈরি
+// রেন্ডারের Environment Variables ব্যবহার করে কানেকশন
+$host = getenv('DB_HOST');
+$user = getenv('DB_USER');
+$pass = getenv('DB_PASS');
+$db   = getenv('DB_NAME');
+
+// কানেকশন তৈরি
 $conn = new mysqli($host, $user, $pass, $db);
 
-// কানেকশন এরর চেক করা
+// কানেকশন এরর হ্যান্ডলিং
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    // এরর লগ করা এবং ইউজারকে সাধারণ মেসেজ দেখানো
+    error_log("Database connection failed: " . $conn->connect_error);
+    die("Database connection error. Please try again later.");
 }
 
-// সারা পৃথিবীর ভাষা সাপোর্ট করার জন্য UTF-8MB4 সেট করা
-// এটি বাংলাসহ সকল ভাষার অক্ষর ঠিক রাখার জন্য বাধ্যতামূলক
+// ইউনিকোড সাপোর্ট নিশ্চিত করা
 $conn->set_charset("utf8mb4");
 
-// পিএইচপি এনকোডিং নিশ্চিত করা
-mb_internal_encoding("UTF-8");
-mb_http_output("UTF-8");
-?>
+// ডেট টাইমজোন সেট করা
+date_default_timezone_set('Asia/Dhaka');
