@@ -1,5 +1,5 @@
 <?php
-/* File: config/db.php - Database Configuration */
+/* File: db.php - Database Configuration */
 
 // রেন্ডারের Environment Variables ব্যবহার করে কানেকশন
 $host = getenv('DB_HOST');
