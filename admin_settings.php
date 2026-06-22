@@ -1,16 +1,20 @@
-
 <?php
-/**
- * ফাইল নাম: admin_settings.php
- * কাজ: অ্যাডমিন প্রোফাইল এবং পিন সেটিংস আপডেট
- */
+ob_start();
 session_start();
-if(!isset($_SESSION['admin_logged_in'])) { header("Location: admin_login.php"); exit; }
-include 'db.php';
+
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: admin_login.php");
+    exit();
+}
+
+require_once 'db.php';
 
 // ল্যাঙ্গুয়েজ সিলেকশন
-if(isset($_GET['lang'])) { $_SESSION['lang'] = $_GET['lang']; }
-$lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : 'bn';
+if (isset($_GET['lang'])) {
+    $_SESSION['lang'] = $_GET['lang'];
+}
+
+$lang = $_SESSION['lang'] ?? 'bn';
 
 $text = [
     'bn' => [
