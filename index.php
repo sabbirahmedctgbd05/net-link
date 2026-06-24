@@ -51,7 +51,6 @@ $text = [
         $res = $conn->query("SELECT * FROM isp_links ORDER BY id DESC");
         if($res && $res->num_rows > 0) {
             while($row = $res->fetch_assoc()) {
-                // ভাষা অনুযায়ী সঠিক কলাম (name_bn বা name_en) প্রদর্শন করা হচ্ছে
                 $display_name = ($lang == 'bn') ? $row['name_bn'] : $row['name_en'];
                 echo '<a href="'.htmlspecialchars($row['url']).'" class="btn" target="_blank">'.htmlspecialchars($display_name).'</a>';
             }
