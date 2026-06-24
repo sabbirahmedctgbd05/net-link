@@ -15,8 +15,24 @@ if(isset($_GET['lang'])) {
 }
 $lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : 'bn';
 
-// সেশন থেকে লগইন থাকা ইউজারের আইডি নেওয়া
+// সেশন থেকে লগইন থাকা ইউজারের আইডি নেওয়া (ডিফল্ট ১)
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1; 
+
+
+// --- স্বয়ংক্রিয় ডিফল্ট ইউজার অ্যাকাউন্ট তৈরি করার মেকানিজম ---
+$check_empty = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
+if($check_empty && $check_empty->num_rows == 0) {
+    // ডাটাবেজে কোনো ইউজার না থাকলে এই ডিফল্ট তথ্যগুলো নিজে থেকেই ঢুকে যাবে
+    $default_username = 'Sabbir Ahmed';
+    $default_email    = 'sabbir@freedb.tech';
+    $default_phone    = '01700000000';
+    $default_pin      = '663636'; // আপনার স্ক্রিনশটের পিন কোড
+
+    $conn->query("INSERT INTO users (id, username, email, phone, pin_code) 
+                  VALUES ('$user_id', '$default_username', '$default_email', '$default_phone', '$default_pin')");
+}
+// -------------------------------------------------------------------------
+
 
 // প্রোফাইল তথ্য এবং পিন কোড আপডেট লজিক
 $msg = '';
@@ -29,12 +45,11 @@ if(isset($_POST['update_profile'])) {
     $current_pin = mysqli_real_escape_string($conn, $_POST['current_pin']);
     $new_pin = mysqli_real_escape_string($conn, $_POST['new_pin']);
     
-    // প্রথমে ডাটাবেজ থেকে বর্তমান পিন চেক করা (স্ক্রিনশট অনুযায়ী কলামের নাম pin_code)
+    // প্রথমে ডাটাবেজ থেকে বর্তমান পিন চেক করা
     $check_query = $conn->query("SELECT * FROM users WHERE id = '$user_id' AND pin_code = '$current_pin'");
     
     if($check_query && $check_query->num_rows > 0) {
-        // বর্তমান পিন মিললে প্রোফাইল তথ্য এবং নতুন পিন একসঙ্গে আপডেট হবে
-        // আপনার ডাটাবেজের টেবিল অনুযায়ী কলামের নাম (username, email, phone, pin_code) নিশ্চিত করে নেবেন
+        // বর্তমান পিন মিললে প্রোফাইল তথ্য আপডেট হবে
         $update_sql = "UPDATE users SET 
                         username = '$username', 
                         email = '$email', 
@@ -67,9 +82,8 @@ if($user_res && $user_res->num_rows > 0) {
     $user_data = $user_res->fetch_assoc();
 }
 
-// ডাটাবেজে তথ্য না থাকলে বা কলামের নাম ভিন্ন হলে এরর এড়াতে ডিফল্ট ভ্যালু সেট করা
 $current_username = isset($user_data['username']) ? $user_data['username'] : 'Sabbir Ahmed';
-$current_email    = isset($user_data['email']) ? $user_data['email'] : 'sabbir@example.com';
+$current_email    = isset($user_data['email']) ? $user_data['email'] : 'sabbir@freedb.tech';
 $current_phone    = isset($user_data['phone']) ? $user_data['phone'] : '01700000000';
 
 // টেক্সট অ্যারে
