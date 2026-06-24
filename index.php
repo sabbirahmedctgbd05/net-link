@@ -22,11 +22,10 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1;
 // --- স্বয়ংক্রিয় ডিফল্ট ইউজার অ্যাকাউন্ট তৈরি করার মেকানিজম (user_pins টেবিলে) ---
 $check_empty = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id'");
 if($check_empty && $check_empty->num_rows == 0) {
-    // ডাটাবেজের user_pins টেবিল খালি থাকলে এই ডিফল্ট তথ্যটি অটোমেটিক ঢুকে যাবে
     $default_username = 'Sabbir Ahmed';
     $default_email    = 'sabbir@freedb.tech';
     $default_phone    = '01700000000';
-    $default_pin      = '663636'; // আপনার স্ক্রিনশটের ডিফল্ট পিন
+    $default_pin      = '663636'; 
 
     $conn->query("INSERT INTO user_pins (id, username, email, phone, pin_code) 
                   VALUES ('$user_id', '$default_username', '$default_email', '$default_phone', '$default_pin')");
@@ -37,25 +36,24 @@ if($check_empty && $check_empty->num_rows == 0) {
 // প্রোফাইল তথ্য এবং পিন কোড আপডেট লজিক
 $msg = '';
 $msg_type = '';
+$show_modal = false; // ফরম সাবমিট হলে মডাল যেন খোলা থাকে
 
 if(isset($_POST['update_profile'])) {
+    $show_modal = true; // এরর বা সাকসেস মেসেজ দেখানোর জন্য মডাল খোলা রাখবে
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $current_pin = mysqli_real_escape_string($conn, $_POST['current_pin']);
     $new_pin = mysqli_real_escape_string($conn, $_POST['new_pin']);
     
-    // user_pins টেবিল থেকে বর্তমান পিন চেক করা হচ্ছে
     $check_query = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id' AND pin_code = '$current_pin'");
     
     if($check_query && $check_query->num_rows > 0) {
-        // বর্তমান পিন মিললে সম্পূর্ণ তথ্য আপডেট হবে
         $update_sql = "UPDATE user_pins SET 
                         username = '$username', 
                         email = '$email', 
                         phone = '$phone'";
                         
-        // ইউজার যদি নতুন পিন কোড ইনপুট দেয়, তবেই পিন কোড আপডেট হবে
         if(!empty($new_pin)) {
             $update_sql .= ", pin_code = '$new_pin'";
         }
@@ -75,7 +73,7 @@ if(isset($_POST['update_profile'])) {
     }
 }
 
-// ফরম পূরণের সুবিধার্থে user_pins টেবিল থেকে ইউজারের বর্তমান তথ্য তুলে আনা
+// user_pins টেবিল থেকে ইউজারের বর্তমান তথ্য তুলে আনা
 $user_data = [];
 $user_res = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id'");
 if($user_res && $user_res->num_rows > 0) {
@@ -100,7 +98,8 @@ $text = [
         'lbl_new_pin' => 'নতুন পিন কোড (পরিবর্তন করতে চাইলে)',
         'save' => 'তথ্য সংরক্ষণ করুন',
         'profile' => 'গ্রাহক প্রোফাইল',
-        'edit_btn' => 'প্রোফাইল এডিট'
+        'edit_btn' => 'প্রোফাইল এডিট',
+        'close' => 'বন্ধ করুন'
     ],
     'en' => [
         'title' => 'Sabbir-Net Portal', 
@@ -114,7 +113,8 @@ $text = [
         'lbl_new_pin' => 'New PIN Code (Optional)',
         'save' => 'Save Changes',
         'profile' => 'User Profile',
-        'edit_btn' => 'Edit Profile'
+        'edit_btn' => 'Edit Profile',
+        'close' => 'Close'
     ]
 ];
 ?>
@@ -137,21 +137,20 @@ $text = [
         .profile-info .user-role { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
         .profile-info .user-name { font-size: 18px; font-weight: bold; }
         
-        /* ল্যাঙ্গুয়েজ এবং এডিট বাটন অ্যাকশন এরিয়া */
+        /* অ্যাকশন বাটনসমূহ */
         .header-actions { position: absolute; top: 15px; right: 20px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
         .lang-btn { background: rgba(255, 255, 255, 0.2); color: white; padding: 3px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
-        .edit-profile-btn { background: #ffffff; color: #007bff; padding: 4px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; border: none; cursor: pointer; }
+        .edit-profile-btn { background: #ffffff; color: #007bff; padding: 4px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer; transition: 0.2s; }
         .edit-profile-btn:active { transform: scale(0.95); }
         
         .container { width: 100%; max-width: 450px; padding: 20px; }
         .portal-title { font-size: 16px; font-weight: bold; color: #4a5568; margin: 10px 0 15px 5px; display: flex; align-items: center; gap: 8px; }
         
-        /* ৪ কলাম গ্রিড লেআউট (এক লাইনে ৪টি মেনু) */
+        /* ৪ কলাম মেনু গ্রিড */
         .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .menu-card { background: white; padding: 12px 6px; border-radius: 12px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.02); border: 1px solid #edf2f7; transition: transform 0.2s; min-height: 85px; }
         .menu-card:active { transform: scale(0.93); }
         
-        /* ছোট আকারের ৪ কলামের জন্য মানানসই আইকন সাইজ */
         .card-icon { font-size: 16px; margin-bottom: 6px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
         .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
         .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
@@ -160,22 +159,28 @@ $text = [
         
         .card-text { font-size: 10px; font-weight: 600; color: #4a5568; line-height: 1.2; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 25px; border: 1px solid #edf2f7; scroll-margin-top: 20px; }
-        .settings-title { font-size: 15px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 15px; }
+        .logout-box { text-align: center; margin-top: 35px; width: 100%; }
+        .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 14px; padding: 10px 25px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
+
+        /* 📌 পপ-আপ উইন্ডো (Modal) সিএসএস */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: white; width: 100%; max-width: 410px; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; }
+        .settings-title { font-size: 16px; font-weight: bold; color: #4a5568; display: flex; align-items: center; gap: 8px; margin: 0; }
+        .close-modal-btn { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #718096; }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-size: 12px; color: #718096; margin-bottom: 6px; font-weight: 600; }
         .form-control { width: 100%; padding: 11px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #f7fafc; transition: 0.2s; }
         .form-control:focus { border-color: #007bff; background: #fff; }
         
-        .submit-btn { width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .submit-btn:active { background: #0056b3; }
-        
+        .submit-btn { width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .alert { padding: 11px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: 500; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        .logout-box { text-align: center; margin-top: 25px; width: 100%; }
-        .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 14px; padding: 10px 25px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
     </style>
 </head>
 <body>
@@ -185,8 +190,7 @@ $text = [
             <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
                 <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
             </a>
-            <!-- ওপরে নতুন এডিট প্রোফাইল বাটন (ক্লিক করলে নিচে স্ক্রোল হবে) -->
-            <button onclick="document.getElementById('profileFormBox').scrollIntoView({behavior: 'smooth'});" class="edit-profile-btn">
+            <button onclick="openModal()" class="edit-profile-btn">
                 <i class="fa-solid fa-user-pen"></i> <?php echo $text[$lang]['edit_btn']; ?>
             </button>
         </div>
@@ -208,7 +212,6 @@ $text = [
             <?php echo $text[$lang]['title']; ?>
         </div>
 
-        <!-- গ্রিড লেআউট: এক লাইনে ৪টি কার্ড বসে -->
         <div class="menu-grid">
             <?php
             $res = $conn->query("SELECT * FROM isp_links ORDER BY id DESC");
@@ -228,11 +231,22 @@ $text = [
             ?>
         </div>
 
-        <!-- প্রোফাইল ফরম বক্স (আইডি যুক্ত করা হয়েছে স্ক্রোলিং এর জন্য) -->
-        <div class="settings-box" id="profileFormBox">
-            <div class="settings-title">
-                <i class="fa-solid fa-user-slider" style="color: #ff9900;"></i> 
-                <?php echo $text[$lang]['profile_settings']; ?>
+        <div class="logout-box">
+            <a href="logout.php" class="logout-btn">
+                <i class="fa-solid fa-power-off"></i> <?php echo $text[$lang]['logout']; ?>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="profileModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="settings-title">
+                    <i class="fa-solid fa-user-slider" style="color: #ff9900;"></i> 
+                    <?php echo $text[$lang]['profile_settings']; ?>
+                </h3>
+                <button class="close-modal-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
             <?php if(!empty($msg)) { ?>
@@ -255,7 +269,7 @@ $text = [
                     <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($current_phone); ?>" required>
                 </div>
                 
-                <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 20px 0;">
+                <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 15px 0;">
                 
                 <div class="form-group">
                     <label style="color: #e53e3e;"><i class="fa-solid fa-shield"></i> <?php echo $text[$lang]['lbl_cur_pin']; ?></label>
@@ -272,14 +286,29 @@ $text = [
                 </button>
             </form>
         </div>
-
-        <div class="logout-box">
-            <a href="logout.php" class="logout-btn">
-                <i class="fa-solid fa-power-off"></i> <?php echo $text[$lang]['logout']; ?>
-            </a>
-        </div>
-
     </div>
+
+    <script>
+        const modal = document.getElementById('profileModal');
+
+        function openModal() {
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // উইন্ডোর বাইরে ব্যাকগ্রাউন্ডে ক্লিক করলেও যেন মডাল বন্ধ হয়
+        function closeModalOnOverlay(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        }
+
+        // পিএইচপি থেকে ফরম সাবমিট করার পর যদি কোনো এরর বা মেসেজ থাকে, তবে উইন্ডোটি অটোমেটিক খোলা থাকবে
+        <?php if($show_modal) { echo "openModal();"; } ?>
+    </script>
 
 </body>
 </html>
