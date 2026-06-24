@@ -17,6 +17,7 @@ $text = [
         'title' => 'অ্যাডমিন ড্যাশবোর্ড',
         'name' => 'নাম', 'email' => 'ইমেইল', 'phone' => 'ফোন',
         'manage_links' => 'লিংক সেটিংস',
+        'manage_users' => 'ইউজার সেটিংস',
         'settings' => 'প্রোফাইল সেটিংস',
         'logout' => 'লগ আউট',
         'admin_panel' => 'অ্যাডমিন প্যানেল',
@@ -26,6 +27,7 @@ $text = [
         'title' => 'Admin Dashboard',
         'name' => 'Name', 'email' => 'Email', 'phone' => 'Phone',
         'manage_links' => 'Link Settings',
+        'manage_users' => 'User Settings',
         'settings' => 'Profile Settings',
         'logout' => 'Logout',
         'admin_panel' => 'Admin Panel',
@@ -104,7 +106,7 @@ $admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
             <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
                 <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
             </a>
-            <!-- ডান কোণায় গিয়ার সেটিং বাটন (প্রোফাইল ও পিন সেটিংস) -->
+            <!-- ডান কোণায় গিয়ার সেটিং বাটন (প্রোফাইল সেটিংসের জন্য এটিই থাকবে) -->
             <a href="admin_settings.php" class="edit-setting-btn" title="<?php echo $text[$lang]['settings']; ?>">
                 <i class="fa-solid fa-gear"></i>
             </a>
@@ -120,8 +122,8 @@ $admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
             
             <!-- অ্যাডমিনের বাকি তথ্য আইকনের নিচে ছিমছামভাবে -->
             <div class="profile-details">
-                <span><i class="fa-regular fa-envelope"></i> <?php echo htmlspecialchars($admin['email'] ?? 'sabbirahmedctgbd05@gmail.com'); ?></span>
-                <span><i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars($admin['phone'] ?? '01832663636'); ?></span>
+                <span><i class="fa-regular fa-envelope"></i> <?php echo htmlspecialchars($admin['email'] ?? ''); ?></span>
+                <span><i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars($admin['phone'] ?? ''); ?></span>
             </div>
         </div>
     </div>
@@ -144,13 +146,11 @@ $admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
                 <div class="card-text"><?php echo $text[$lang]['manage_links']; ?></div>
             </a>
             
-            <!-- ২. প্রোফাইল সেটিংস কার্ড -->
-            <a href="admin_settings.php" class="menu-card">
-                <div class="card-icon"><i class="fa-solid fa-user-gear"></i></div>
-                <div class="card-text"><?php echo $text[$lang]['settings']; ?></div>
+            <!-- ২. ইউজার ম্যানেজমেন্ট বাটন কার্ড -->
+            <a href="user_settings.php" class="menu-card">
+                <div class="card-icon"><i class="fa-solid fa-users-gear"></i></div>
+                <div class="card-text"><?php echo $text[$lang]['manage_users']; ?></div>
             </a>
-
-            <!-- [এখানে আপনার নতুন কোনো কোড বা লুপের মাধ্যমে নতুন ফিচার যুক্ত করলে সেগুলো অটোমেটিক ৪ কলাম গ্রিডে বসে যাবে] -->
             
         </div>
 
