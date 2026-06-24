@@ -16,16 +16,18 @@ $text = [
     'bn' => [
         'title' => 'অ্যাডমিন প্রোফাইল',
         'name' => 'নাম', 'email' => 'ইমেইল', 'phone' => 'ফোন',
-        'manage_links' => 'লিংক ম্যানেজমেন্ট',
-        'settings' => 'প্রোফাইল ও পিন সেটিংস',
-        'back' => 'ড্যাশবোর্ডে ফিরে যান'
+        'manage_links' => 'লিংক সেটিংস',
+        'settings' => 'প্রোফাইল সেটিংস',
+        'back' => 'হোম ড্যাশবোর্ড',
+        'profile_info' => 'বিস্তারিত প্রোফাইল তথ্য'
     ],
     'en' => [
         'title' => 'Admin Profile',
         'name' => 'Name', 'email' => 'Email', 'phone' => 'Phone',
-        'manage_links' => 'Manage Links',
-        'settings' => 'Profile & PIN Settings',
-        'back' => 'Back to Dashboard'
+        'manage_links' => 'Link Settings',
+        'settings' => 'Profile Settings',
+        'back' => 'Home Dashboard',
+        'profile_info' => 'Detailed Profile Info'
     ]
 ];
 
@@ -37,43 +39,131 @@ $admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- ব্রাউজারের অটো-ট্রান্সলেট মেসেজ বন্ধ করার জন্য -->
     <meta name="google" content="notranslate">
     <title><?php echo $text[$lang]['title']; ?> - Sabbir-Net</title>
+    <!-- ফন্ট অসাম আইকন লাইব্রেরি -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color: #2c3e50; }
-        .lang-btn { text-align: center; margin-bottom: 20px; }
-        .lang-link { background: #6c757d; color: white; padding: 5px 15px; border-radius: 20px; text-decoration: none; font-size: 12px; }
-        .card { background: #ffffff; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); width: 100%; max-width: 400px; text-align: center; }
-        .profile-info { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .profile-info p { margin: 5px 0; font-size: 14px; }
-        .nav-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #fff; border: 1px solid #dee2e6; border-radius: 12px; text-decoration: none; color: #333; font-weight: bold; transition: 0.3s; }
-        .nav-btn:hover { background: #f1f3f5; border-color: #007bff; }
-        .back-btn { color: #007bff; text-decoration: none; font-weight: bold; margin-top: 20px; display: block; padding: 10px; border: 1px solid #007bff; border-radius: 12px; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { margin: 0; padding: 0; background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        
+        /* মোবাইল অ্যাপ স্টাইল টপ হেডার */
+        .app-header { width: 100%; max-width: 450px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 30px 20px 35px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); position: relative; text-align: center; }
+        
+        /* কোণার ল্যাঙ্গুয়েজ বাটন */
+        .header-actions { position: absolute; top: 15px; left: 20px; }
+        .lang-btn { background: rgba(255, 255, 255, 0.2); color: white; padding: 4px 12px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+        
+        /* মাঝখানে গোল প্রোফাইল এরিয়া */
+        .profile-container { display: flex; flex-direction: column; align-items: center; margin-top: 10px; }
+        .profile-icon { width: 85px; height: 85px; background: rgba(255, 255, 255, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #fff; border: 3px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 12px; }
+        
+        .admin-title { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 2px; }
+        .admin-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+
+        /* নিচের কন্টেইনার */
+        .container { width: 100%; max-width: 450px; padding: 20px; }
+        
+        /* প্রোফাইলের বিস্তারিত তথ্য বক্স */
+        .info-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border: 1px solid #edf2f7; margin-bottom: 25px; }
+        .info-title { font-size: 14px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .info-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px dashed #e2e8f0; }
+        .info-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .info-item i { font-size: 16px; color: #2a5298; width: 24px; text-align: center; }
+        .info-label { font-size: 12px; color: #718096; font-weight: 600; min-width: 60px; }
+        .info-value { font-size: 14px; color: #2c3e50; font-weight: 500; word-break: break-all; }
+
+        /* কালারফুল ৪-কলাম গ্রিড মেনু লেআউট */
+        .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .menu-card { background: white; padding: 12px 5px; border-radius: 14px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #edf2f7; transition: transform 0.2s; min-height: 90px; }
+        .menu-card:active { transform: scale(0.93); }
+        
+        /* ডায়নামিক আইকন রাউন্ড বক্স কালার */
+        .card-icon { font-size: 16px; margin-bottom: 6px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
+        
+        /* আইকনগুলোর জন্য গ্রেডিয়েন্ট কম্বিনেশন */
+        .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #007bff, #00c6ff); }
+        .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #ff9900, #ff5500); }
+        .menu-card:nth-child(4n+3) .card-icon { background: linear-gradient(135deg, #e53e3e, #ff5f6d); }
+        .menu-card:nth-child(4n+4) .card-icon { background: linear-gradient(135deg, #7f00ff, #e100ff); }
+        
+        .card-text { font-size: 10px; font-weight: 700; color: #4a5568; line-height: 1.2; word-break: break-word; }
     </style>
 </head>
 <body>
 
-    <div class="lang-btn">
-        <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-link">
-            <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
-        </a>
-    </div>
-
-    <div class="card">
-        <h3><?php echo $text[$lang]['title']; ?></h3>
-        
-        <div class="profile-info">
-            <p><strong><?php echo $text[$lang]['name']; ?>:</strong> <?php echo htmlspecialchars($admin['full_name'] ?? ''); ?></p>
-            <p><strong><?php echo $text[$lang]['email']; ?>:</strong> <?php echo htmlspecialchars($admin['email'] ?? ''); ?></p>
-            <p><strong><?php echo $text[$lang]['phone']; ?>:</strong> <?php echo htmlspecialchars($admin['phone'] ?? ''); ?></p>
+    <!-- টপ হেডার অংশ -->
+    <div class="app-header">
+        <div class="header-actions">
+            <!-- ভাষা পরিবর্তনের বাটন -->
+            <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
+                <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
+            </a>
         </div>
         
-        <a href="index_settings.php" class="nav-btn"><?php echo $text[$lang]['manage_links']; ?></a>
-        <a href="admin_settings.php" class="nav-btn"><?php echo $text[$lang]['settings']; ?></a>
+        <!-- মাঝখানে গোল প্রোফাইল ইনফো -->
+        <div class="profile-container">
+            <div class="profile-icon">
+                <i class="fa-solid fa-id-card"></i>
+            </div>
+            <div class="admin-title"><?php echo $text[$lang]['title']; ?></div>
+            <div class="admin-name"><?php echo htmlspecialchars($admin['full_name'] ?? 'Sabbir Ahmed'); ?></div>
+        </div>
+    </div>
+
+    <!-- মূল বডি কন্টেইনার -->
+    <div class="container">
         
-        <a href="admin.php" class="back-btn"><?php echo $text[$lang]['back']; ?></a>
+        <!-- প্রোফাইল কার্ডের ভেতরের তথ্য বিবরণী -->
+        <div class="info-box">
+            <div class="info-title">
+                <i class="fa-solid fa-circle-info" style="color: #2a5298;"></i>
+                <?php echo $text[$lang]['profile_info']; ?>
+            </div>
+            
+            <div class="info-item">
+                <i class="fa-regular fa-user"></i>
+                <div class="info-label"><?php echo $text[$lang]['name']; ?></div>
+                <div class="info-value"><?php echo htmlspecialchars($admin['full_name'] ?? 'Sabbir Ahmed'); ?></div>
+            </div>
+            
+            <div class="info-item">
+                <i class="fa-regular fa-envelope"></i>
+                <div class="info-label"><?php echo $text[$lang]['email']; ?></div>
+                <div class="info-value"><?php echo htmlspecialchars($admin['email'] ?? 'sabbirahmedctgbd05@gmail.com'); ?></div>
+            </div>
+            
+            <div class="info-item">
+                <i class="fa-solid fa-phone"></i>
+                <div class="info-label"><?php echo $text[$lang]['phone']; ?></div>
+                <div class="info-value"><?php echo htmlspecialchars($admin['phone'] ?? '01832663636'); ?></div>
+            </div>
+        </div>
+
+        <!-- ৪-কলামের ডায়নামিক রেডি গ্রিড মেনু লেআউট -->
+        <div class="menu-grid">
+            
+            <!-- ১. লিংক সেটিংস ম্যানেজমেন্ট কার্ড -->
+            <a href="index_settings.php" class="menu-card">
+                <div class="card-icon"><i class="fa-solid fa-link"></i></div>
+                <div class="card-text"><?php echo $text[$lang]['manage_links']; ?></div>
+            </a>
+            
+            <!-- ২. প্রোফাইল সেটিংস কার্ড -->
+            <a href="admin_settings.php" class="menu-card">
+                <div class="card-icon"><i class="fa-solid fa-user-gear"></i></div>
+                <div class="card-text"><?php echo $text[$lang]['settings']; ?></div>
+            </a>
+            
+            <!-- ৩. ড্যাশবোর্ডে ফিরে যাওয়ার কার্ড (Back to Dashboard) -->
+            <a href="admin.php" class="menu-card">
+                <div class="card-icon"><i class="fa-solid fa-house-user"></i></div>
+                <div class="card-text"><?php echo $text[$lang]['back']; ?></div>
+            </a>
+            
+        </div>
+
     </div>
 
 </body>
