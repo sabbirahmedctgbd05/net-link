@@ -99,7 +99,8 @@ $text = [
         'lbl_cur_pin' => 'বর্তমান পিন কোড (যাচাইয়ের জন্য)',
         'lbl_new_pin' => 'নতুন পিন কোড (পরিবর্তন করতে চাইলে)',
         'save' => 'তথ্য সংরক্ষণ করুন',
-        'profile' => 'গ্রাহক প্রোফাইল'
+        'profile' => 'গ্রাহক প্রোফাইল',
+        'edit_btn' => 'প্রোফাইল এডিট'
     ],
     'en' => [
         'title' => 'Sabbir-Net Portal', 
@@ -112,7 +113,8 @@ $text = [
         'lbl_cur_pin' => 'Current PIN Code (For Verification)',
         'lbl_new_pin' => 'New PIN Code (Optional)',
         'save' => 'Save Changes',
-        'profile' => 'User Profile'
+        'profile' => 'User Profile',
+        'edit_btn' => 'Edit Profile'
     ]
 ];
 ?>
@@ -135,24 +137,30 @@ $text = [
         .profile-info .user-role { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
         .profile-info .user-name { font-size: 18px; font-weight: bold; }
         
-        .lang-btn { position: absolute; top: 25px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+        /* ল্যাঙ্গুয়েজ এবং এডিট বাটন অ্যাকশন এরিয়া */
+        .header-actions { position: absolute; top: 15px; right: 20px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+        .lang-btn { background: rgba(255, 255, 255, 0.2); color: white; padding: 3px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
+        .edit-profile-btn { background: #ffffff; color: #007bff; padding: 4px 10px; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; border: none; cursor: pointer; }
+        .edit-profile-btn:active { transform: scale(0.95); }
         
         .container { width: 100%; max-width: 450px; padding: 20px; }
         .portal-title { font-size: 16px; font-weight: bold; color: #4a5568; margin: 10px 0 15px 5px; display: flex; align-items: center; gap: 8px; }
         
-        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .menu-card { background: white; padding: 20px 15px; border-radius: 15px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf2f7; transition: transform 0.2s; }
-        .menu-card:active { transform: scale(0.95); }
+        /* ৪ কলাম গ্রিড লেআউট (এক লাইনে ৪টি মেনু) */
+        .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .menu-card { background: white; padding: 12px 6px; border-radius: 12px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.02); border: 1px solid #edf2f7; transition: transform 0.2s; min-height: 85px; }
+        .menu-card:active { transform: scale(0.93); }
         
-        .card-icon { font-size: 24px; margin-bottom: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
+        /* ছোট আকারের ৪ কলামের জন্য মানানসই আইকন সাইজ */
+        .card-icon { font-size: 16px; margin-bottom: 6px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
         .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
         .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
         .menu-card:nth-child(4n+3) .card-icon { background: linear-gradient(135deg, #ff9900, #ff5500); }
         .menu-card:nth-child(4n+4) .card-icon { background: linear-gradient(135deg, #7f00ff, #e100ff); }
         
-        .card-text { font-size: 13px; font-weight: 600; color: #4a5568; }
+        .card-text { font-size: 10px; font-weight: 600; color: #4a5568; line-height: 1.2; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 25px; border: 1px solid #edf2f7; }
+        .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 25px; border: 1px solid #edf2f7; scroll-margin-top: 20px; }
         .settings-title { font-size: 15px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 12px; color: #718096; margin-bottom: 6px; font-weight: 600; }
@@ -173,9 +181,15 @@ $text = [
 <body>
 
     <div class="app-header">
-        <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
-            <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
-        </a>
+        <div class="header-actions">
+            <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
+                <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
+            </a>
+            <!-- ওপরে নতুন এডিট প্রোফাইল বাটন (ক্লিক করলে নিচে স্ক্রোল হবে) -->
+            <button onclick="document.getElementById('profileFormBox').scrollIntoView({behavior: 'smooth'});" class="edit-profile-btn">
+                <i class="fa-solid fa-user-pen"></i> <?php echo $text[$lang]['edit_btn']; ?>
+            </button>
+        </div>
         <div class="profile-section">
             <div class="avatar">
                 <i class="fa-solid fa-user-gear"></i>
@@ -194,6 +208,7 @@ $text = [
             <?php echo $text[$lang]['title']; ?>
         </div>
 
+        <!-- গ্রিড লেআউট: এক লাইনে ৪টি কার্ড বসে -->
         <div class="menu-grid">
             <?php
             $res = $conn->query("SELECT * FROM isp_links ORDER BY id DESC");
@@ -208,12 +223,13 @@ $text = [
                     echo '</a>';
                 }
             } else {
-                echo '<p style="grid-column: span 2; text-align:center; color:gray; padding:20px;">'.$text[$lang]['no_link'].'</p>';
+                echo '<p style="grid-column: span 4; text-align:center; color:gray; padding:20px;">'.$text[$lang]['no_link'].'</p>';
             }
             ?>
         </div>
 
-        <div class="settings-box">
+        <!-- প্রোফাইল ফরম বক্স (আইডি যুক্ত করা হয়েছে স্ক্রোলিং এর জন্য) -->
+        <div class="settings-box" id="profileFormBox">
             <div class="settings-title">
                 <i class="fa-solid fa-user-slider" style="color: #ff9900;"></i> 
                 <?php echo $text[$lang]['profile_settings']; ?>
