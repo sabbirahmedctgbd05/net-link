@@ -15,20 +15,20 @@ if(isset($_GET['lang'])) {
 }
 $lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : 'bn';
 
-// সেশন থেকে লগইন থাকা ইউজারের আইডি নেওয়া (ডিফল্ট ১)
+// সেশন থেকে লগইন থাকা ইউজারের আইডি নেওয়া
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1; 
 
 
-// --- স্বয়ংক্রিয় ডিফল্ট ইউজার অ্যাকাউন্ট তৈরি করার মেকানিজম ---
-$check_empty = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
+// --- স্বয়ংক্রিয় ডিফল্ট ইউজার অ্যাকাউন্ট তৈরি করার মেকানিজম (user_pins টেবিলে) ---
+$check_empty = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id'");
 if($check_empty && $check_empty->num_rows == 0) {
-    // ডাটাবেজে কোনো ইউজার না থাকলে এই ডিফল্ট তথ্যগুলো নিজে থেকেই ঢুকে যাবে
+    // ডাটাবেজের user_pins টেবিল খালি থাকলে এই ডিফল্ট তথ্যটি অটোমেটিক ঢুকে যাবে
     $default_username = 'Sabbir Ahmed';
     $default_email    = 'sabbir@freedb.tech';
     $default_phone    = '01700000000';
-    $default_pin      = '663636'; // আপনার স্ক্রিনশটের পিন কোড
+    $default_pin      = '663636'; // আপনার স্ক্রিনশটের ডিফল্ট পিন
 
-    $conn->query("INSERT INTO users (id, username, email, phone, pin_code) 
+    $conn->query("INSERT INTO user_pins (id, username, email, phone, pin_code) 
                   VALUES ('$user_id', '$default_username', '$default_email', '$default_phone', '$default_pin')");
 }
 // -------------------------------------------------------------------------
@@ -45,12 +45,12 @@ if(isset($_POST['update_profile'])) {
     $current_pin = mysqli_real_escape_string($conn, $_POST['current_pin']);
     $new_pin = mysqli_real_escape_string($conn, $_POST['new_pin']);
     
-    // প্রথমে ডাটাবেজ থেকে বর্তমান পিন চেক করা
-    $check_query = $conn->query("SELECT * FROM users WHERE id = '$user_id' AND pin_code = '$current_pin'");
+    // user_pins টেবিল থেকে বর্তমান পিন চেক করা হচ্ছে
+    $check_query = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id' AND pin_code = '$current_pin'");
     
     if($check_query && $check_query->num_rows > 0) {
-        // বর্তমান পিন মিললে প্রোফাইল তথ্য আপডেট হবে
-        $update_sql = "UPDATE users SET 
+        // বর্তমান পিন মিললে সম্পূর্ণ তথ্য আপডেট হবে
+        $update_sql = "UPDATE user_pins SET 
                         username = '$username', 
                         email = '$email', 
                         phone = '$phone'";
@@ -75,9 +75,9 @@ if(isset($_POST['update_profile'])) {
     }
 }
 
-// ফরম পূরণের সুবিধার্থে ডাটাবেজ থেকে ইউজারের বর্তমান তথ্য তুলে আনা
+// ফরম পূরণের সুবিধার্থে user_pins টেবিল থেকে ইউজারের বর্তমান তথ্য তুলে আনা
 $user_data = [];
-$user_res = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
+$user_res = $conn->query("SELECT * FROM user_pins WHERE id = '$user_id'");
 if($user_res && $user_res->num_rows > 0) {
     $user_data = $user_res->fetch_assoc();
 }
@@ -129,26 +129,21 @@ $text = [
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { margin: 0; padding: 0; background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
         
-        /* মোবাইল অ্যাপ স্টাইল টপ প্রোফাইল হেডার */
         .app-header { width: 100%; max-width: 450px; background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 25px 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
         .profile-section { display: flex; align-items: center; gap: 15px; }
         .avatar { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid rgba(255,255,255,0.4); }
         .profile-info .user-role { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
         .profile-info .user-name { font-size: 18px; font-weight: bold; }
         
-        /* ল্যাঙ্গুয়েজ বাটন */
         .lang-btn { position: absolute; top: 25px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
         
-        /* মেইন কন্টেইনার */
         .container { width: 100%; max-width: 450px; padding: 20px; }
         .portal-title { font-size: 16px; font-weight: bold; color: #4a5568; margin: 10px 0 15px 5px; display: flex; align-items: center; gap: 8px; }
         
-        /* মোবাইল সফটওয়্যার ভিত্তিক গ্রিড মেনু */
         .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .menu-card { background: white; padding: 20px 15px; border-radius: 15px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf2f7; transition: transform 0.2s; }
         .menu-card:active { transform: scale(0.95); }
         
-        /* কালার থিম */
         .card-icon { font-size: 24px; margin-bottom: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
         .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
         .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
@@ -157,7 +152,6 @@ $text = [
         
         .card-text { font-size: 13px; font-weight: 600; color: #4a5568; }
 
-        /* প্রোফাইল তথ্য ও পিন কোড সেটিংস বক্স */
         .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 25px; border: 1px solid #edf2f7; }
         .settings-title { font-size: 15px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .form-group { margin-bottom: 15px; }
@@ -168,12 +162,10 @@ $text = [
         .submit-btn { width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .submit-btn:active { background: #0056b3; }
         
-        /* নোটিফিকেশন অ্যালার্ট */
         .alert { padding: 11px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: 500; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-        /* লগআউট বাটন */
         .logout-box { text-align: center; margin-top: 25px; width: 100%; }
         .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 14px; padding: 10px 25px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
     </style>
@@ -208,8 +200,6 @@ $text = [
             if($res->num_rows > 0) {
                 while($row = $res->fetch_assoc()) {
                     $display_name = ($lang == 'bn') ? $row['name_bn'] : $row['name_en'];
-                    
-                    // ডেটাবেজে আইকন ফিল্ড থাকলে সেটা পাবে, না থাকলে ডিফল্ট আইকন শো করবে
                     $icon = (!empty($row['icon'])) ? $row['icon'] : 'fa-solid fa-network-wired';
                     
                     echo '<a href="'.$row['url'].'" class="menu-card" target="_blank">';
@@ -278,5 +268,5 @@ $text = [
 </body>
 </html>
 <?php 
-ob_end_flush(); // আউটপুট বাফার শেষ করা হলো
+ob_end_flush(); 
 ?>
