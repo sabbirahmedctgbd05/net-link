@@ -1,5 +1,5 @@
 <?php
-ob_start(); // হেডার এরর প্রতিরোধের জন্য আউটপুট বাফারিং
+ob_start(); // লাইন ১: হেডার এরর স্থায়ীভাবে দূর করার জন্য আউটপুট বাফারিং
 session_start();
 
 // ইউজার লগইন না থাকলে তাকে লগইন পেজে পাঠিয়ে দিবে
@@ -15,39 +15,21 @@ if(isset($_GET['lang'])) {
 }
 $lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : 'bn';
 
-// পিন/পাসওয়ার্ড পরিবর্তনের লজিক (প্রসেসিং)
-$msg = '';
-if(isset($_POST['change_pin'])) {
-    $current_pin = mysqli_real_escape_with_str($conn, $_POST['current_pin']); // আপনার ডিবি স্ট্রাকচার অনুযায়ী কুয়েরি লিখবেন
-    $new_pin = mysqli_real_escape_with_str($conn, $_POST['new_pin']);
-    
-    // এখানে আপনার ইউজারের টেবিল অনুযায়ী পাসওয়ার্ড/পিন আপডেট কুয়েরি হবে
-    // $uid = $_SESSION['user_id'];
-    // $conn->query("UPDATE users SET pin='$new_pin' WHERE id='$uid'");
-    $msg = ($lang == 'bn') ? 'পিন সফলভাবে পরিবর্তিত হয়েছে!' : 'PIN changed successfully!';
-}
-
-// টেক্সট অ্যারে
+// টেক্সট অ্যারে (আপনার আগেরটাই রাখা হয়েছে, শুধু সেটিংসের টেক্সট যোগ করা হয়েছে)
 $text = [
     'bn' => [
         'title' => 'সাব্বির নেট পোর্টাল', 
         'logout' => 'লগ আউট', 
         'no_link' => 'বর্তমানে কোনো লিংক নেই',
-        'settings' => 'পিন পরিবর্তন করুন',
-        'current_pin' => 'বর্তমান পিন',
-        'new_pin' => 'নতুন পিন',
-        'save' => 'সংরক্ষণ করুন',
-        'admin' => 'গ্রাহক প্রোফাইল'
+        'settings' => 'পিন পরিবর্তন',
+        'profile' => 'গ্রাহক প্রোফাইল'
     ],
     'en' => [
         'title' => 'Sabbir-Net Portal', 
         'logout' => 'Logout', 
         'no_link' => 'No links available',
-        'settings' => 'Change PIN Settings',
-        'current_pin' => 'Current PIN',
-        'new_pin' => 'New PIN',
-        'save' => 'Save Changes',
-        'admin' => 'User Profile'
+        'settings' => 'Change PIN',
+        'profile' => 'User Profile'
     ]
 ];
 ?>
@@ -61,73 +43,68 @@ $text = [
     <title>Sabbir-Net Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
-        body { margin: 0; padding: 0; background: #f4f6f9; min-height: 100vh; padding-bottom: 30px; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { margin: 0; padding: 0; background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
         
-        /* প্রোফাইল হেডার স্টাইল */
-        .top-profile-bar { background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 25px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
-        .profile-container { display: flex; align-items: center; gap: 15px; }
-        .avatar-box { width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #007bff; border: 3px solid rgba(255,255,255,0.4); }
-        .profile-info .role { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-        .profile-info .name { font-size: 20px; font-weight: bold; margin-top: 2px; }
+        /* মোবাইল অ্যাপ স্টাইল টপ হেডার ও প্রোফাইল */
+        .app-header { width: 100%; max-width: 450px; background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 25px 20px; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
+        .profile-section { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid rgba(255,255,255,0.4); }
+        .profile-info .user-role { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
+        .profile-info .user-name { font-size: 18px; font-weight: bold; }
         
-        /* ভাষা পরিবর্তনের বাটন */
-        .lang-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        /* ল্যাঙ্গুয়েজ বাটন */
+        .lang-btn { position: absolute; top: 25px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; padding: 5px 12px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
         
-        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; }
-        .portal-title { font-size: 18px; font-weight: 700; color: #444; margin: 15px 0; text-align: left; display: flex; align-items: center; gap: 8px; }
+        /* মেইন কন্টেইনার */
+        .container { width: 100%; max-width: 450px; padding: 20px; }
+        .portal-title { font-size: 16px; font-weight: bold; color: #4a5568; margin: 10px 0 15px 5px; display: flex; align-items: center; gap: 8px; }
         
-        /* মোবাইল অ্যাপের মত কালারফুল বাটন গ্রিড */
-        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-        .menu-card { background: white; padding: 20px 15px; border-radius: 18px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: transform 0.2s; position: relative; overflow: hidden; border: 1px solid #edf2f7; }
+        /* মোবাইল সফটওয়্যারের মতো গ্রিড মেনু */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .menu-card { background: white; padding: 20px 15px; border-radius: 15px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf2f7; transition: transform 0.2s; }
         .menu-card:active { transform: scale(0.95); }
         
-        /* আইকন ও চমৎকার কালার প্যালেট (অটোমেটিক কালার চক্রের জন্য CSS এনথ-চাইল্ড) */
-        .card-icon { font-size: 28px; margin-bottom: 12px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
-        
+        /* আইকন কালার থিম */
+        .card-icon { font-size: 24px; margin-bottom: 10px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
         .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
         .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
         .menu-card:nth-child(4n+3) .card-icon { background: linear-gradient(135deg, #ff9900, #ff5500); }
         .menu-card:nth-child(4n+4) .card-icon { background: linear-gradient(135deg, #7f00ff, #e100ff); }
         
-        .card-text { font-size: 14px; font-weight: 600; color: #4a5568; }
-
-        /* পিন কোড সেটিংস বক্স */
-        .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-top: 20px; border: 1px solid #edf2f7; }
-        .settings-title { font-size: 15px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; color: #718096; margin-bottom: 5px; font-weight: 600; }
-        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #f7fafc; }
-        .form-control:focus { border-color: #007bff; background: #fff; }
-        .submit-btn { width: 100%; background: #4a5568; color: white; border: none; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .submit-btn:active { background: #2d3748; }
-        .alert-success { background: #d4edda; color: #155724; padding: 10px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; }
+        /* সেটিংস ও অন্য ফিক্সড বাটন স্টাইল */
+        .settings-card { background: white; grid-column: span 2; padding: 15px 20px; border-radius: 15px; text-decoration: none; color: #4a5568; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf2f7; font-weight: 600; font-size: 14px; margin-top: 5px; }
+        .settings-card .setting-icon { width: 35px; height: 35px; background: #edf2f7; color: #4a5568; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .settings-card .arrow-right { margin-left: auto; color: #a0aec0; }
+        
+        .card-text { font-size: 13px; font-weight: 600; color: #4a5568; }
 
         /* লগআউট বাটন */
-        .logout-container { text-align: center; margin-top: 30px; }
-        .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 15px; padding: 10px 20px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
+        .logout-box { text-align: center; margin-top: 30px; width: 100%; }
+        .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 14px; padding: 10px 25px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
     </style>
 </head>
 <body>
 
-    <div class="top-profile-bar">
+    <div class="app-header">
         <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
-            <i class="fa-solid fa-earth-americas"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
+            <i class="fa-solid fa-globe"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
         </a>
-        <div class="profile-container">
-            <div class="avatar-box">
-                <i class="fa-solid fa-user-shield"></i>
+        <div class="profile-section">
+            <div class="avatar">
+                <i class="fa-solid fa-user-gear"></i>
             </div>
             <div class="profile-info">
-                <div class="role"><?php echo $text[$lang]['admin']; ?></div>
-                <div class="name">Sabbir Ahmed</div> </div>
+                <div class="user-role"><?php echo $text[$lang]['profile']; ?></div>
+                <div class="user-name">Sabbir Ahmed</div>
+            </div>
         </div>
     </div>
 
-    <div class="main-container">
+    <div class="container">
         
         <div class="portal-title">
-            <i class="fa-solid fa-layer-group" style="color: #007bff;"></i> 
+            <i class="fa-solid fa-grip" style="color: #007bff;"></i> 
             <?php echo $text[$lang]['title']; ?>
         </div>
 
@@ -138,8 +115,8 @@ $text = [
                 while($row = $res->fetch_assoc()) {
                     $display_name = ($lang == 'bn') ? $row['name_bn'] : $row['name_en'];
                     
-                    // ডেটাবেজ থেকে যদি আইকন নাম সেট করা না থাকে, তবে ডিফল্ট আইকন সেট হবে
-                    $icon = (!empty($row['icon'])) ? $row['icon'] : 'fa-solid fa-link';
+                    // ডাটাবেজে আইকন ফিল্ড থাকলে সেটা পাবে, না থাকলে ডিফল্ট গ্লোব আইকন শো করবে
+                    $icon = (!empty($row['icon'])) ? $row['icon'] : 'fa-solid fa-network-wired';
                     
                     echo '<a href="'.$row['url'].'" class="menu-card" target="_blank">';
                     echo '  <div class="card-icon"><i class="'.$icon.'"></i></div>';
@@ -150,34 +127,17 @@ $text = [
                 echo '<p style="grid-column: span 2; text-align:center; color:gray; padding:20px;">'.$text[$lang]['no_link'].'</p>';
             }
             ?>
+
+            <a href="settings.php" class="settings-card">
+                <div class="setting-icon"><i class="fa-solid fa-key"></i></div>
+                <span><?php echo $text[$lang]['settings']; ?></span>
+                <i class="fa-solid fa-chevron-right arrow-right"></i>
+            </a>
         </div>
 
-        <div class="settings-box">
-            <div class="settings-title">
-                <i class="fa-solid fa-key" style="color: #ff9900;"></i> 
-                <?php echo $text[$lang]['settings']; ?>
-            </div>
-            
-            <?php if(!empty($msg)) { echo '<div class="alert-success">'.$msg.'</div>'; } ?>
-            
-            <form action="" method="POST">
-                <div class="form-group">
-                    <label><?php echo $text[$lang]['current_pin']; ?></label>
-                    <input type="password" name="current_pin" class="form-control" placeholder="••••" required>
-                </div>
-                <div class="form-group">
-                    <label><?php echo $text[$lang]['new_pin']; ?></label>
-                    <input type="password" name="new_pin" class="form-control" placeholder="••••" required>
-                </div>
-                <button type="submit" name="change_pin" class="submit-btn">
-                    <i class="fa-solid fa-circle-check"></i> <?php echo $text[$lang]['save']; ?>
-                </button>
-            </form>
-        </div>
-
-        <div class="logout-container">
+        <div class="logout-box">
             <a href="logout.php" class="logout-btn">
-                <i class="fa-solid fa-right-from-bracket"></i> <?php echo $text[$lang]['logout']; ?>
+                <i class="fa-solid fa-power-off"></i> <?php echo $text[$lang]['logout']; ?>
             </a>
         </div>
 
@@ -186,5 +146,5 @@ $text = [
 </body>
 </html>
 <?php 
-ob_end_flush(); // বাফার শেষ করে পেজ রেন্ডার করা হলো
+ob_end_flush(); // আউটপুট বাফার শেষ করা হলো
 ?>
