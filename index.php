@@ -1,104 +1,190 @@
 <?php
-ob_start();
+ob_start(); // হেডার এরর প্রতিরোধের জন্য আউটপুট বাফারিং
 session_start();
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: admin_login.php");
-    exit();
+// ইউজার লগইন না থাকলে তাকে লগইন পেজে পাঠিয়ে দিবে
+if(!isset($_SESSION['user_logged_in'])) { 
+    header("Location: login.php"); 
+    exit; 
 }
+include 'db.php';
 
-require_once 'db.php';
-
-// ল্যাঙ্গুয়েজ সিলেকশন
-if (isset($_GET['lang'])) {
+// ল্যাঙ্গুয়েজ সিলেকশন হ্যান্ডেল করা
+if(isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
+$lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : 'bn';
 
-$lang = $_SESSION['lang'] ?? 'bn';
+// পিন/পাসওয়ার্ড পরিবর্তনের লজিক (প্রসেসিং)
+$msg = '';
+if(isset($_POST['change_pin'])) {
+    $current_pin = mysqli_real_escape_with_str($conn, $_POST['current_pin']); // আপনার ডিবি স্ট্রাকচার অনুযায়ী কুয়েরি লিখবেন
+    $new_pin = mysqli_real_escape_with_str($conn, $_POST['new_pin']);
+    
+    // এখানে আপনার ইউজারের টেবিল অনুযায়ী পাসওয়ার্ড/পিন আপডেট কুয়েরি হবে
+    // $uid = $_SESSION['user_id'];
+    // $conn->query("UPDATE users SET pin='$new_pin' WHERE id='$uid'");
+    $msg = ($lang == 'bn') ? 'পিন সফলভাবে পরিবর্তিত হয়েছে!' : 'PIN changed successfully!';
+}
 
+// টেক্সট অ্যারে
 $text = [
     'bn' => [
-        'title' => 'অ্যাডমিন প্রোফাইল সেটিংস', 
-        'name' => 'পুরো নাম', 
-        'email' => 'ইমেইল', 
-        'phone' => 'ফোন নম্বর', 
-        'old_pin' => 'বর্তমান পিন', 
-        'new_pin' => 'নতুন পিন (খালি রাখুন যদি না বদলাতে চান)', 
-        'btn' => 'সেভ করুন', 
-        'success' => '✅ তথ্য আপডেট হয়েছে!',
-        'invalid_pin' => '❌ বর্তমান পিন নম্বরটি সঠিক নয়!',
-        'back' => 'অ্যাডমিন প্রোফাইলে ফিরে যান'
+        'title' => 'সাব্বির নেট পোর্টাল', 
+        'logout' => 'লগ আউট', 
+        'no_link' => 'বর্তমানে কোনো লিংক নেই',
+        'settings' => 'পিন পরিবর্তন করুন',
+        'current_pin' => 'বর্তমান পিন',
+        'new_pin' => 'নতুন পিন',
+        'save' => 'সংরক্ষণ করুন',
+        'admin' => 'গ্রাহক প্রোফাইল'
     ],
     'en' => [
-        'title' => 'Admin Profile Settings', 
-        'name' => 'Full Name', 
-        'email' => 'Email', 
-        'phone' => 'Phone Number', 
-        'old_pin' => 'Current PIN', 
-        'new_pin' => 'New PIN (Leave blank to keep old)', 
-        'btn' => 'Save Changes', 
-        'success' => '✅ Profile updated!',
-        'invalid_pin' => '❌ Current PIN is incorrect!',
-        'back' => 'Back to Admin Profile'
+        'title' => 'Sabbir-Net Portal', 
+        'logout' => 'Logout', 
+        'no_link' => 'No links available',
+        'settings' => 'Change PIN Settings',
+        'current_pin' => 'Current PIN',
+        'new_pin' => 'New PIN',
+        'save' => 'Save Changes',
+        'admin' => 'User Profile'
     ]
 ];
-
-$message = "";
-
-// বর্তমান তথ্য আনা (লজিকটি উপরে আনা হয়েছে যাতে আপডেটের পর লেটেস্ট ডাটা দেখায়)
-$admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
-
-// আপডেট লজিক
-if (isset($_POST['update_profile'])) {
-    $full_name = trim($_POST['full_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $old_pin = $_POST['old_pin'];
-    $new_pin = !empty($_POST['new_pin']) ? $_POST['new_pin'] : $old_pin;
-
-    // বর্তমান পিনটি ডাটাবেজের পিনের সাথে মিলছে কিনা তা যাচাই করা হচ্ছে
-    if ($admin && $old_pin === $admin['pin_code']) {
-        $stmt = $conn->prepare("UPDATE admin_pins SET full_name=?, email=?, phone=?, pin_code=? WHERE pin_code=?");
-        $stmt->bind_param("sssss", $full_name, $email, $phone, $new_pin, $old_pin);
-        
-        if ($stmt->execute()) {
-            $message = "<div style='background:#d4edda; color:#155724; padding:10px; border-radius:10px; margin-bottom:10px; text-align:center;'>{$text[$lang]['success']}</div>";
-            // আপডেটের পর নতুন ডাটা রিফ্রেশ করা হচ্ছে
-            $admin = $conn->query("SELECT * FROM admin_pins LIMIT 1")->fetch_assoc();
-        }
-    } else {
-        $message = "<div style='background:#f8d7da; color:#721c24; padding:10px; border-radius:10px; margin-bottom:10px; text-align:center;'>{$text[$lang]['invalid_pin']}</div>";
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title><?php echo $text[$lang]['title']; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    <meta http-equiv="Content-Language" content="<?php echo $lang; ?>">
+    <title>Sabbir-Net Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: #fff; padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); box-sizing: border-box; }
-        input { width: 100%; padding: 15px; margin: 8px 0; border: 2px solid #e1e8ed; border-radius: 12px; font-size: 16px; outline: none; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; box-sizing: border-box; }
-        .back-btn { margin-top: 20px; padding: 12px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; text-align: center; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { margin: 0; padding: 0; background: #f4f6f9; min-height: 100vh; padding-bottom: 30px; }
+        
+        /* প্রোফাইল হেডার স্টাইল */
+        .top-profile-bar { background: linear-gradient(135deg, #007bff, #00c6ff); color: white; padding: 25px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        .profile-container { display: flex; align-items: center; gap: 15px; }
+        .avatar-box { width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #007bff; border: 3px solid rgba(255,255,255,0.4); }
+        .profile-info .role { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .profile-info .name { font-size: 20px; font-weight: bold; margin-top: 2px; }
+        
+        /* ভাষা পরিবর্তনের বাটন */
+        .lang-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: white; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: bold; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        
+        .main-container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        .portal-title { font-size: 18px; font-weight: 700; color: #444; margin: 15px 0; text-align: left; display: flex; align-items: center; gap: 8px; }
+        
+        /* মোবাইল অ্যাপের মত কালারফুল বাটন গ্রিড */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        .menu-card { background: white; padding: 20px 15px; border-radius: 18px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: transform 0.2s; position: relative; overflow: hidden; border: 1px solid #edf2f7; }
+        .menu-card:active { transform: scale(0.95); }
+        
+        /* আইকন ও চমৎকার কালার প্যালেট (অটোমেটিক কালার চক্রের জন্য CSS এনথ-চাইল্ড) */
+        .card-icon { font-size: 28px; margin-bottom: 12px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; }
+        
+        .menu-card:nth-child(4n+1) .card-icon { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+        .menu-card:nth-child(4n+2) .card-icon { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .menu-card:nth-child(4n+3) .card-icon { background: linear-gradient(135deg, #ff9900, #ff5500); }
+        .menu-card:nth-child(4n+4) .card-icon { background: linear-gradient(135deg, #7f00ff, #e100ff); }
+        
+        .card-text { font-size: 14px; font-weight: 600; color: #4a5568; }
+
+        /* পিন কোড সেটিংস বক্স */
+        .settings-box { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-top: 20px; border: 1px solid #edf2f7; }
+        .settings-title { font-size: 15px; font-weight: bold; color: #4a5568; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #718096; margin-bottom: 5px; font-weight: 600; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; background: #f7fafc; }
+        .form-control:focus { border-color: #007bff; background: #fff; }
+        .submit-btn { width: 100%; background: #4a5568; color: white; border: none; padding: 11px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .submit-btn:active { background: #2d3748; }
+        .alert-success { background: #d4edda; color: #155724; padding: 10px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; }
+
+        /* লগআউট বাটন */
+        .logout-container { text-align: center; margin-top: 30px; }
+        .logout-btn { display: inline-flex; align-items: center; gap: 8px; color: #e53e3e; text-decoration: none; font-weight: bold; font-size: 15px; padding: 10px 20px; background: #fff1f1; border-radius: 12px; border: 1px solid #fed7d7; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h3 style="margin-top: 0; text-align: center;"><?php echo $text[$lang]['title']; ?></h3>
-        <?php echo $message; ?>
-        <form method="POST">
-            <input type="text" name="full_name" value="<?php echo htmlspecialchars($admin['full_name'] ?? ''); ?>" placeholder="<?php echo $text[$lang]['name']; ?>" required>
-            <input type="email" name="email" value="<?php echo htmlspecialchars($admin['email'] ?? ''); ?>" placeholder="<?php echo $text[$lang]['email']; ?>" required>
-            <input type="text" name="phone" value="<?php echo htmlspecialchars($admin['phone'] ?? ''); ?>" placeholder="<?php echo $text[$lang]['phone']; ?>" required>
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-            <input type="password" name="old_pin" placeholder="<?php echo $text[$lang]['old_pin']; ?>" required>
-            <input type="password" name="new_pin" placeholder="<?php echo $text[$lang]['new_pin']; ?>">
-            <button type="submit" name="update_profile"><?php echo $text[$lang]['btn']; ?></button>
-        </form>
+
+    <div class="top-profile-bar">
+        <a href="?lang=<?php echo ($lang == 'bn') ? 'en' : 'bn'; ?>" class="lang-btn">
+            <i class="fa-solid fa-earth-americas"></i> <?php echo ($lang == 'bn') ? 'English' : 'বাংলা'; ?>
+        </a>
+        <div class="profile-container">
+            <div class="avatar-box">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="profile-info">
+                <div class="role"><?php echo $text[$lang]['admin']; ?></div>
+                <div class="name">Sabbir Ahmed</div> </div>
+        </div>
     </div>
-    <a href="admin_profile.php" class="back-btn"><?php echo $text[$lang]['back']; ?></a>
+
+    <div class="main-container">
+        
+        <div class="portal-title">
+            <i class="fa-solid fa-layer-group" style="color: #007bff;"></i> 
+            <?php echo $text[$lang]['title']; ?>
+        </div>
+
+        <div class="menu-grid">
+            <?php
+            $res = $conn->query("SELECT * FROM isp_links ORDER BY id DESC");
+            if($res->num_rows > 0) {
+                while($row = $res->fetch_assoc()) {
+                    $display_name = ($lang == 'bn') ? $row['name_bn'] : $row['name_en'];
+                    
+                    // ডেটাবেজ থেকে যদি আইকন নাম সেট করা না থাকে, তবে ডিফল্ট আইকন সেট হবে
+                    $icon = (!empty($row['icon'])) ? $row['icon'] : 'fa-solid fa-link';
+                    
+                    echo '<a href="'.$row['url'].'" class="menu-card" target="_blank">';
+                    echo '  <div class="card-icon"><i class="'.$icon.'"></i></div>';
+                    echo '  <div class="card-text">'.$display_name.'</div>';
+                    echo '</a>';
+                }
+            } else {
+                echo '<p style="grid-column: span 2; text-align:center; color:gray; padding:20px;">'.$text[$lang]['no_link'].'</p>';
+            }
+            ?>
+        </div>
+
+        <div class="settings-box">
+            <div class="settings-title">
+                <i class="fa-solid fa-key" style="color: #ff9900;"></i> 
+                <?php echo $text[$lang]['settings']; ?>
+            </div>
+            
+            <?php if(!empty($msg)) { echo '<div class="alert-success">'.$msg.'</div>'; } ?>
+            
+            <form action="" method="POST">
+                <div class="form-group">
+                    <label><?php echo $text[$lang]['current_pin']; ?></label>
+                    <input type="password" name="current_pin" class="form-control" placeholder="••••" required>
+                </div>
+                <div class="form-group">
+                    <label><?php echo $text[$lang]['new_pin']; ?></label>
+                    <input type="password" name="new_pin" class="form-control" placeholder="••••" required>
+                </div>
+                <button type="submit" name="change_pin" class="submit-btn">
+                    <i class="fa-solid fa-circle-check"></i> <?php echo $text[$lang]['save']; ?>
+                </button>
+            </form>
+        </div>
+
+        <div class="logout-container">
+            <a href="logout.php" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> <?php echo $text[$lang]['logout']; ?>
+            </a>
+        </div>
+
+    </div>
+
 </body>
 </html>
+<?php 
+ob_end_flush(); // বাফার শেষ করে পেজ রেন্ডার করা হলো
+?>
